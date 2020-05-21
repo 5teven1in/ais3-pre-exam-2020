@@ -1,0 +1,15 @@
+service meeseeks_box
+{
+        disable = no
+        type = UNLISTED
+        wait = no
+        server = /home/meeseeks_box/run.sh
+        socket_type = stream
+        protocol = tcp
+        user = meeseeks_box
+        port = 9487
+        flags = REUSE
+        per_source = 5
+        rlimit_cpu = 3
+        nice = 18
+}
