@@ -1,5 +1,5 @@
 CC		= gcc
-CCFLAGS		= -pie
+CCFLAGS		= -pie -s
 
 PROGS	= meeseeks_box
 PREFIX	= AIS3
@@ -7,7 +7,7 @@ PREFIX	= AIS3
 all: $(PROGS)
 
 %: %.c
-	$(CC) -o $@ $(CCFLAGS) $<
+	$(CC) -o $(OUTDIR)$@ $(CCFLAGS) $<
 
 .PHONY: clean sig
 
