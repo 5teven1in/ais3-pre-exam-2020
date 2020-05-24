@@ -2,7 +2,7 @@ from pwn import *
 import time
 
 ip = "localhost"
-port = 10000
+port = 10004
 
 r = remote(ip, port)
 # r = process("./death_crystal")
