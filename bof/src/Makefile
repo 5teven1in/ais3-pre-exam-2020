@@ -1,5 +1,5 @@
 CC		= gcc
-CCFLAGS		= -no-pie -fno-stack-protector -s
+CCFLAGS		= -fno-stack-protector -no-pie -s
 
 PROGS	= bof
 PREFIX	= AIS3

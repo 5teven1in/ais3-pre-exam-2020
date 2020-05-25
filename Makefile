@@ -1,7 +1,9 @@
+ENV	= OUTDIR=../service/share/
+
 all:
-	make -C ./death_crystal/src OUTDIR=../service/share/
-	make -C ./meeseeks_box/src OUTDIR=../service/share/
-	make -C ./morty_school/src OUTDIR=../service/share/
-	make -C ./nonsense/src OUTDIR=../service/share/
-	make -C ./portal_gun/src OUTDIR=../service/share/
+	make -B -C ./death_crystal/src $(ENV)
+	make -B -C ./meeseeks_box/src $(ENV)
+	make -B -C ./morty_school/src $(ENV)
+	make -B -C ./nonsense/src $(ENV)
+	make -B -C ./portal_gun/src $(ENV)
 

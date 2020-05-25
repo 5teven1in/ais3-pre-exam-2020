@@ -1,5 +1,5 @@
 CC		= gcc
-CCFLAGS		= -pie -s
+CCFLAGS		= -Wl,-z,relro,-z,now -s
 
 PROGS	= death_crystal
 PREFIX	= AIS3
