@@ -1,0 +1,15 @@
+service morty_school
+{
+        disable = no
+        type = UNLISTED
+        wait = no
+        server = /home/morty_school/run.sh
+        socket_type = stream
+        protocol = tcp
+        user = morty_school
+        port = 9487
+        flags = REUSE
+        per_source = 5
+        rlimit_cpu = 3
+        nice = 18
+}
