@@ -1,0 +1,44 @@
+version: "3"
+services:
+  bof:
+    build: ./bof/service
+    volumes:
+      - ./bof/service/share:/home/bof:ro
+      - ./bof/service/xinetd:/etc/xinetd.d/bof:ro
+    ports:
+      - "10000:9487"
+  nonsense:
+    build: ./nonsense/service
+    volumes:
+      - ./nonsense/service/share:/home/nonsense:ro
+      - ./nonsense/service/xinetd:/etc/xinetd.d/nonsense:ro
+    ports:
+      - "10001:9487"
+  portal_gun:
+    build: ./portal_gun/service
+    volumes:
+      - ./portal_gun/service/share:/home/portal_gun:ro
+      - ./portal_gun/service/xinetd:/etc/xinetd.d/portal_gun:ro
+    ports:
+      - "10002:9487"
+  morty_school:
+    build: ./morty_school/service
+    volumes:
+      - ./morty_school/service/share:/home/morty_school:ro
+      - ./morty_school/service/xinetd:/etc/xinetd.d/morty_school:ro
+    ports:
+      - "10003:9487"
+  death_crystal:
+    build: ./death_crystal/service
+    volumes:
+      - ./death_crystal/service/share:/home/death_crystal:ro
+      - ./death_crystal/service/xinetd:/etc/xinetd.d/death_crystal:ro
+    ports:
+      - "10004:9487"
+  meeseeks_box:
+    build: ./meeseeks_box/service
+    volumes:
+     - ./meeseeks_box/service/share:/home/meeseeks_box:ro
+     - ./meeseeks_box/service/xinetd:/etc/xinetd.d/meeseeks_box:ro
+    ports:
+     - "10005:9487"
