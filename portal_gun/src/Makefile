@@ -15,5 +15,6 @@ all: $(PROGS)
 clean:
 	rm -f *~ $(PROGS) hook.so
 
-sig: $(PROGS)
+sig: $(PROGS) hook.so
 	mv $(PROGS) $(PROGS)-`sha256sum $(PROGS) | awk '{print $$1}'`
+	mv hook.so hook.so-`sha256sum hook.so | awk '{print $$1}'`
