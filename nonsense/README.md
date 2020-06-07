@@ -8,4 +8,4 @@ Rick's stupid nonsense catchphrase is "wubba lubba dub dub".
 
 Challenge environment: Ubuntu 18.04
 
-- [nonsense-8ccbca2ca7f8825c843596a09c0806275a5b3fdf1c6c570bc0276fb0afc9210c](nonsense/service/share/nonsense)
+- [nonsense-8ccbca2ca7f8825c843596a09c0806275a5b3fdf1c6c570bc0276fb0afc9210c](service/share/nonsense)
