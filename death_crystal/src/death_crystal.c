@@ -3,7 +3,7 @@
 #define MAXN 4
 #define LEN 0x40
 
-char blacklist[MAXN] = {'$', '\\', '/', '^'};
+char blocklist[MAXN] = {'$', '\\', '/', '^'};
 char format[MAXN] = {'c', 'p', 'n', 'h'};
 char message[LEN] = {0};
 
@@ -20,7 +20,7 @@ int check(char* s) {
     int cnt = 0;
     for (int i = 0; s[i] != 0; i++, cnt++) {
         for (int j = 0; j < MAXN; j++) {
-            if (s[i] == blacklist[j])
+            if (s[i] == blocklist[j])
                 return 0;
         }
     }
