@@ -184,6 +184,52 @@ NX:       NX enabled
 PIE:      No PIE (0x400000)
 ```
 
+#### Analysis
+
+- main
+
+It uses `gets` function that causes buffer overflow vulnerability.
+
+```c
+__int64 __fastcall main(int a1, char **a2, char **a3)
+{
+  char v4[112]; // [rsp+0h] [rbp-70h]
+
+  Z5nobufv();
+  puts("The Portal Gun is a gadget that allows the user(s) to travel between different universes/dimensions/realities.");
+  puts("Where do you want to go?");
+  gets(v4);    // buffer overflow
+  return 0LL;
+}
+```
+
+- hook.so
+
+It hooks system function, and it just prints a string, not invoking a shell and executing a command.
+
+```c
+__int64 system()
+{
+  puts("** system function hook **");
+  return 0LL;
+}
+```
+
+#### Vulnerability
+
+- Buffer overflow with no limit input length
+
+#### Idea
+
+Use Return Oriented Programming (ROP) to leak the library base address and get the shell. And jump to the beginning of the main function to launch the ROP attack multiple times.
+
+- leak the library base address
+    - leverage `puts` function to print the function address of the library, and then subtract the offset to get the base address of the library.
+- get the shell
+    - figure out the real address of the `system` function and invoke `system("sh")`.
+    - one gadget
+    - ...
+
 <details><summary>hack.py</summary>
 
 ```python
@@ -388,3 +434,12 @@ r.interactive()
 ```
 
 </details>
+
+
+## Fun fact
+
+- The easiest challenge 👻 BOF had been solved within 4 minutes after completion began by **qqgnoe466263**.
+- A few people just submitted ```AIS3{TOO0O0O0O0OO0O0OOo0o0o0o00_EASY}```, and that is the flag of 👻 BOF last year. Such a nice try 🤪
+- **LKK - Goburin'** got first blood on 🔫 Portal gun, 📃 Nonsense, 🏫 Morty school!
+- **K1a - Goburin'** got first blood on 🔮 Death crystal and 📦 Meeseeks box!
+- Congrats to **K1a - Goburin'**, **lys0829**, **hank0438**, **oalieno - r08921a06** and **LKK - Goburin'** for ALL KILL 💥 Pwn challenges!
