@@ -401,6 +401,104 @@ NX:       NX enabled
 PIE:      PIE enabled
 ```
 
+#### Analysis
+
+- main
+
+There is a format string vulnerability, and if `sub_97F(format)` returns non zero will trigger it.
+
+```c
+void __fastcall __noreturn main(__int64 a1, char **a2, char **a3)
+{
+  char format[8]; // [rsp+0h] [rbp-30h]
+  ...
+  while ( 1 )
+  {
+    puts("Foresee:");
+    *(_QWORD *)format = 0LL;
+    v4 = 0LL;
+    v5 = 0LL;
+    v6 = 0LL;
+    v7 = 0LL;
+    __isoc99_scanf("%39s", format);
+    if ( (unsigned int)sub_97F(format) )
+      printf(format);    // format string
+    puts(&byte_C9F);
+  }
+}
+```
+
+- sub_97F
+
+If certain characters and formats contain, it will return zero.
+
+```c
+__int64 __fastcall sub_97F(__int64 a1)
+{
+  int v2; // [rsp+14h] [rbp-14h]
+  int i; // [rsp+18h] [rbp-10h]
+  int j; // [rsp+1Ch] [rbp-Ch]
+  int k; // [rsp+20h] [rbp-8h]
+  int l; // [rsp+24h] [rbp-4h]
+
+  v2 = 0;
+  for ( i = 0; *(_BYTE *)(i + a1); ++i )
+  {
+    for ( j = 0; j <= 3; ++j )
+    {
+      if ( *(_BYTE *)(i + a1) == byte_202010[j] )            // check
+        return 0LL;
+    }
+    ++v2;
+  }
+  for ( k = 0; k < v2 - 1; ++k )
+  {
+    if ( *(_BYTE *)(k + a1) == '%' )
+    {
+      for ( l = 0; l <= 3; ++l )
+      {
+        if ( *(_BYTE *)(k + 1LL + a1) == byte_202014[l] )    // check
+          return 0LL;
+      }
+    }
+  }
+  return 1LL;
+}
+```
+
+More specificlly, if a null-terminated string contains `'$', '\', '/', '^'` characters or `"%c", "%p", "%n", "%h"` substrings, it will return zero.
+
+```c
+.data:0000000000202010 byte_202010     db '$', '\', '/', '^'
+.data:0000000000202014 byte_202014     db 'c', 'p', 'n', 'h'
+```
+
+- sub_8DA
+
+Read the flag in `unk_202060` which is in the bss section, that looks very kindful.
+
+```c
+int sub_8DA()
+{
+  FILE *stream; // [rsp+8h] [rbp-8h]
+
+  setvbuf(stdout, 0LL, 2, 0LL);
+  setvbuf(stdin, 0LL, 2, 0LL);
+  setvbuf(stderr, 0LL, 2, 0LL);
+  stream = fopen("/home/death_crystal/flag", "r");
+  fread(&unk_202060, 0x40uLL, 1uLL, stream);
+  return fclose(stream);
+}
+```
+
+#### Vulnerability
+
+- format string but block some certain characters
+
+#### Idea
+
+Leak the code base address and print the flag. Use `%llu` to print the full address (8 bytes) and use `%s` to print the flag.
+
 <details><summary>hack.py</summary>
 
 ```python
