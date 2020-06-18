@@ -284,6 +284,74 @@ NX:       NX enabled
 PIE:      No PIE (0x400000)
 ```
 
+#### Analysis
+
+- sub_400C6D
+
+It leaks the address of `puts`, and we can calculate the library base address easily 😂
+
+```c
+int sub_400C6D()
+{
+  puts("Welcome to Morty school ^_^");
+  puts("We need you to teach Morty.");
+  return printf("\nUseful information: %p\n\n", &puts);
+}
+```
+
+- sub_400B80
+
+There is no boundary check for `v4 = (__int64)&unk_6020A0 + v1` and if the value of `*(_QWORD *)(v4 + 16)` is not zero; then, we can write data in `*(void **)(v4 + 16)`. Besides, there is a buffer overflow vulnerability in the end.
+
+```c
+unsigned __int64 sub_400B80()
+{
+  int v1; // [rsp+8h] [rbp-88h]
+  int v2; // [rsp+Ch] [rbp-84h]
+  void *v3; // [rsp+10h] [rbp-80h]
+  __int64 v4; // [rsp+18h] [rbp-78h]
+  char buf[104]; // [rsp+20h] [rbp-70h]
+  unsigned __int64 v6; // [rsp+88h] [rbp-8h]
+
+  v6 = __readfsqword(0x28u);
+  puts("Which Morty you want to teach?");
+  __isoc99_scanf("%d", &v1);
+  v3 = &unk_6020A0;
+  v1 *= 24;
+  v4 = (__int64)&unk_6020A0 + v1;                   // no check for the boundary
+  if ( *(_QWORD *)(v4 + 16) )
+  {
+    puts("Talk him the correct message:");
+    v2 = read(0, *(void **)(v4 + 16), 0x100uLL);    // OOB write
+    puts("Confirm again:");
+    read(0, buf, 0x100uLL);                         // buffer overflow
+  }
+  return __readfsqword(0x28u) ^ v6;
+}
+```
+
+#### Vulnerability
+
+- out-of-bounds write in `sub_400B80`
+- buffer overflow
+
+#### Idea
+
+Because the binary is partial RELRO, we could launch the GOT hijack. First, we need to figure out the function GOT address is in the memory or not.
+
+In gdb-peda, you can use `find` to search the value:
+
+```shell
+gdb-peda$ find 0x602020
+Searching for '0x602020' in: None ranges
+Found 1 results, display max 1 items:
+morty_school : 0x4005d0 --> 0x602020 --> 0x4006a6 (<__stack_chk_fail@plt+6>:	push   0x1)
+```
+
+And you can find all function GOT addresses in `[0x400528, 0x400658]`. Therefore, if you want to write the address X, find the pointer Y points to X. Then, calculate the offset to make `v4 = Y - 16`.
+
+It has stack guard protection, and that means it will abort when the canary is wrong by calling `__stack_chk_fail`. So, I hook it as one gadget; then input a lot of null bytes to make the one gadget constraints hold and also trigger `__stack_chk_fail` to spawn the shell.
+
 <details><summary>hack.py</summary>
 
 ```python
