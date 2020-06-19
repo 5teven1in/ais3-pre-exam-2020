@@ -14,7 +14,7 @@ make
 
 ## Challenge
 
-### 👻 BOF
+### 👻 BOF - 189 Solves
 
 > buffer overflow
 
@@ -57,7 +57,7 @@ r.interactive()
 
 </details>
 
-### 📃 Nonsense
+### 📃 Nonsense - 47 Solves
 
 > alphanumeric shellcode, out of bounds
 
@@ -76,7 +76,7 @@ RWX:      Has RWX segments
 
 - main
 
-Read the input in `unk_601100` and `unk_6010A0`, and then call `sub_400698`. If the return value is not zero it will take `unk_6010A0` as function pointer and call it.
+Read the input in `unk_601100` and `unk_6010A0`, and then call `sub_400698`. If the return value is not zero it will take `unk_6010A0` as a function pointer and call it.
 
 ```c
 __int64 __fastcall main(int a1, char **a2, char **a3)
@@ -131,13 +131,11 @@ __int64 sub_400698()
 
 #### Idea
 
-Write the alphanumeric shellcode (< 96 bytes) and leverage OOB read to bypass the check if you need it.
-
-You can see the available x86-64 instructions [here](https://nets.ec/Alphanumeric_shellcode) and construct the shellcode to get the shell. (there would be many ways to achieve it 😳)
-
-My solution based on the [shellcode](https://hama.hatenadiary.jp/entry/2017/04/04/190129) (60 bytes) with the modification to fix the address of “/bin/sh” and append the nonsense string at the end.
+Write the alphanumeric shellcode (< 96 bytes) and leverage OOB read to bypass the check if you need it. And you can see the available x86-64 instructions [here](https://nets.ec/Alphanumeric_shellcode) and construct the shellcode to get the shell. (there would be many ways to achieve it 😳)
 
 **RR**Yh00AAX1A0hA004X1A4hA00AX1A8QX4**t**Pj0X40PZPjAX4znoNDnRYZnCXAwubbalubbadubdub
+
+This is my solution based on the [shellcode](https://hama.hatenadiary.jp/entry/2017/04/04/190129) (60 bytes) with the modification to fix the address of “/bin/sh” and append the nonsense string at the end.
 
 <details><summary>hack.py</summary>
 
@@ -170,7 +168,7 @@ r.interactive()
 
 </details>
 
-### 🔫 Portal gun
+### 🔫 Portal gun - 28 Solves
 
 > return oriented programming, ret2libc
 
@@ -217,7 +215,7 @@ __int64 system()
 
 #### Vulnerability
 
-- Buffer overflow with no limit input length
+- buffer overflow with no limit input length
 
 #### Idea
 
@@ -270,7 +268,7 @@ r.interactive()
 
 </details>
 
-### 🏫 Morty school
+### 🏫 Morty school - 14 Solves
 
 > out of bounds, GOT hijack
 
@@ -350,7 +348,7 @@ morty_school : 0x4005d0 --> 0x602020 --> 0x4006a6 (<__stack_chk_fail@plt+6>:	pus
 
 And you can find all function GOT addresses in `[0x400528, 0x400658]`. Therefore, if you want to write the address X, find the pointer Y points to X. Then, calculate the offset to make `v4 = Y - 16`.
 
-It has stack guard protection, and that means it will abort when the canary is wrong by calling `__stack_chk_fail`. So, I hook it as one gadget; then input a lot of null bytes to make the one gadget constraints hold and also trigger `__stack_chk_fail` to spawn the shell.
+It has stack guard protection, and that means it will abort when the canary is wrong by calling `__stack_chk_fail`. So, I hook it as one gadget; then input a lot of null bytes to make the one gadget constraints hold and also overflow the buffer to trigger `__stack_chk_fail` which spawns a shell.
 
 <details><summary>hack.py</summary>
 
@@ -387,7 +385,7 @@ r.interactive()
 
 </details>
 
-### 🔮 Death crystal
+### 🔮 Death crystal - 10 Solves
 
 > format string
 
@@ -529,7 +527,7 @@ r.interactive()
 
 </details>
 
-### 📦 Meeseeks box
+### 📦 Meeseeks box - 8 Solves
 
 > use after free, tcache dup
 
@@ -542,6 +540,68 @@ Stack:    Canary found
 NX:       NX enabled
 PIE:      PIE enabled
 ```
+
+#### Analysis
+
+- sub_ED5
+
+In delete function, it just frees the memory but does not set the pointer to null. So, we can show the freed memory by show function, and it causes use after free vulnerability.
+
+```c
+unsigned __int64 sub_ED5()
+{
+  int v1; // [rsp+4h] [rbp-Ch]
+  unsigned __int64 v2; // [rsp+8h] [rbp-8h]
+
+  v2 = __readfsqword(0x28u);
+  printf("ID: ");
+  __isoc99_scanf("%d", &v1);
+  if ( v1 >= 0 && v1 <= 4 && *((_QWORD *)&unk_203060 + v1) )
+    free(*((void **)&unk_203060 + v1));    // pointer dose not set to null
+  puts("All done!");
+  return __readfsqword(0x28u) ^ v2;
+}
+```
+
+- sub_D17
+
+We can malloc any size we want, and that is great!
+
+```c
+unsigned __int64 sub_D17()
+{
+  int v1; // [rsp+8h] [rbp-18h]
+  int i; // [rsp+Ch] [rbp-14h]
+  void *v3; // [rsp+10h] [rbp-10h]
+  unsigned __int64 v4; // [rsp+18h] [rbp-8h]
+
+  v4 = __readfsqword(0x28u);
+  puts("I'm Mr. Meeseeks! Look at me!");
+  printf("Size: ");
+  __isoc99_scanf("%d", &v1);
+  v3 = malloc(v1);
+  printf("Request: ");
+  __isoc99_scanf("%s", v3);
+  for ( i = 0; i <= 4; ++i )
+  {
+    if ( !qword_203060[i] )
+      qword_203060[i] = v3;
+  }
+  if ( rand() & 1 )
+    puts("Yesiree!");
+  else
+    puts("Can do!");
+  return __readfsqword(0x28u) ^ v4;
+}
+```
+
+#### Vulnerability
+
+- use after free
+
+#### Idea
+
+Free a large size chunk to get an unsorted bin and show the content to leak the library base address. Then we can use [tcache dup](https://github.com/shellphish/how2heap/blob/master/glibc_2.26/tcache_dup.c) to write `__malloc_hook` as one gadget and call create function to trigger it.
 
 <details><summary>hack.py</summary>
 
